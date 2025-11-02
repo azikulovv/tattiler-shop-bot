@@ -46,7 +46,7 @@ export const productCallback = async (ctx: Context) => {
     `⚡ Стиль, который выделяет. Возьми свой прямо сейчас!`;
 
   const keyboard = Markup.inlineKeyboard([
-    [Markup.button.callback("💰 Купить", `buy:id=${product.id}`)],
+    [Markup.button.callback("💰 Купить", `order:id=${product.id}`)],
     [Markup.button.callback("⬅️ Назад", `catalog:page=${page}`)],
   ]);
 

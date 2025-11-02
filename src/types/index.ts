@@ -1,19 +1,13 @@
 import type { Message, Update } from "telegraf/typings/core/types/typegram";
-import type { Context, NarrowedContext, Scenes } from "telegraf";
-import type { Product } from "./product";
+import type { NarrowedContext, Scenes } from "telegraf";
 
-export interface BotSession {
-  flow: string;
-  step: number;
-  order: {
+export interface SessionData extends Scenes.WizardSessionData {
+  order?: {
     address: string;
-    contact: string;
-    product: Product;
+    phone: string;
   };
 }
 
-export interface BotContext extends Context {
-  session: Partial<BotSession>;
-}
+export interface BotContext extends Scenes.WizardContext<SessionData> {}
 
 export type TextContext = NarrowedContext<BotContext, Update.MessageUpdate<Message.TextMessage>>;
