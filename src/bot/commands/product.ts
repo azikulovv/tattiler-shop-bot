@@ -23,8 +23,8 @@ export const productCallback = async (ctx: BotContext) => {
 
   const caption = ctx.i18n.t("product.title", {
     name: product.name,
-    description: product.description,
     price: product.price,
+    description: product.description,
   });
 
   const keyboard = Markup.inlineKeyboard([

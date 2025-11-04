@@ -9,6 +9,8 @@ type State = {
   address: string;
   phone: string;
   product: Product;
+  name: string;
+  username: string;
 };
 
 let state: Partial<State> = {};
@@ -23,30 +25,49 @@ export const orderWizard = new Scenes.WizardScene<BotContext>(
 
     state.product = product;
 
-    await ctx.reply("📍 Куда необходимо доставить?");
+    await ctx.reply(ctx.i18n.t("order.delivery-address"));
     return ctx.wizard.next();
   },
 
   // Step 2 - ask the user for the phone number
   async (ctx) => {
-    // (ctx.session as any).address = (ctx.message as any).text;
     state.address = (ctx.message as any).text;
-    await ctx.reply("Введите номер телефона:");
+    await ctx.reply(ctx.i18n.t("order.phone"));
     return ctx.wizard.next();
   },
 
   async (ctx) => {
-    // (ctx.session as any).phone = (ctx.message as any).text;
     state.phone = (ctx.message as any).text;
 
-    await ctx.reply(
-      `✅ Проверьте данные:\n\n📍 Адрес: ${state.address}\n👤 Имя: ${ctx.from?.first_name}\n📞 Телефон: ${state.phone}\n Product Name: ${state.product?.name}`,
-      Markup.inlineKeyboard([
+    await ctx.reply(ctx.i18n.t("order.username"));
+    return ctx.wizard.next();
+  },
+
+  async (ctx) => {
+    state.username = (ctx.message as any).text;
+
+    await ctx.reply(ctx.i18n.t("order.name"));
+    return ctx.wizard.next();
+  },
+
+  async (ctx) => {
+    state.name = (ctx.message as any).text;
+
+    await ctx.replyWithPhoto(state.product!.image, {
+      caption: ctx.i18n.t("order.confirmation", {
+        address: state.address,
+        phone: state.phone,
+        name: state.name,
+        username: state.username,
+        productName: state.product?.name,
+        productPrice: state.product?.price,
+      }),
+      reply_markup: Markup.inlineKeyboard([
         [Markup.button.callback("✅ Подтвердить", "confirm_order")],
         [Markup.button.callback("✏️ Изменить", "edit_order")],
         [Markup.button.callback("❌ Отменить", "cancel_order")],
-      ])
-    );
+      ]).reply_markup,
+    });
     return ctx.wizard.next();
   },
 
@@ -58,12 +79,13 @@ export const orderWizard = new Scenes.WizardScene<BotContext>(
     if (action === "confirm_order") {
       await ctx.deleteMessage();
 
-      await ctx.telegram.sendMessage(
-        constants.ADMIN_ID,
-        `📍 Адрес: ${state.address}\n👤 Имя: ${ctx.from?.first_name}\n📞 Телефон: ${state.phone}\n Product${state.product?.name}`
-      );
+      await ctx.telegram.sendPhoto(constants.ADMIN_ID, state.product!.image, {
+        caption: ctx.i18n.t("order.card", {
+          state,
+        }),
+      });
 
-      await ctx.reply("🎉 Заказ оформлен! Мы свяжемся с вами в ближайшее время.", {
+      await ctx.reply(ctx.i18n.t("order.success"), {
         reply_markup: Markup.inlineKeyboard([Markup.button.callback("Главное меню", "start")])
           .reply_markup,
       });
@@ -71,13 +93,13 @@ export const orderWizard = new Scenes.WizardScene<BotContext>(
     }
 
     if (action === "edit_order") {
-      await ctx.reply("✏️ Начнём заново. Введите адрес доставки:");
+      await ctx.reply(ctx.i18n.t("order.retry.delivery-address"));
       ctx.wizard.selectStep(1);
       return;
     }
 
     if (action === "cancel_order") {
-      await ctx.reply("❌ Заказ отменён. Если захотите начать снова — напишите /start.");
+      await ctx.reply(ctx.i18n.t("order.cancelled"));
       return ctx.scene.leave();
     }
   }
